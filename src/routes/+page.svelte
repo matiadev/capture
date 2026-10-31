@@ -15,6 +15,9 @@
 
 	let loading = $state(false);
 	let loadError = $state<string | null>(null);
+	let canGoBack = $state(false);
+	let canGoForward = $state(false);
+	let webview: any = null;
 	let result = $state<PageResult | null>(null);
 	let captureState = $state<'idle' | 'capturing' | 'success'>('idle');
 	let imageState = $state<'idle' | 'working' | 'success'>('idle');
@@ -58,12 +61,25 @@
 		error = null;
 		result = null;
 		loadError = null;
+		canGoBack = false;
+		canGoForward = false;
 		loading = true;
 		request = { id: ++requestId, url: target };
 	}
 
 	function attachWebview(node: HTMLElement) {
 		const view = node as any;
+		webview = view;
+
+		const syncHistory = () => {
+			try {
+				canGoBack = view.canGoBack();
+				canGoForward = view.canGoForward();
+			} catch {
+				canGoBack = false;
+				canGoForward = false;
+			}
+		};
 
 		const onStart = () => {
 			loading = true;
@@ -71,6 +87,7 @@
 		const onFinish = () => {
 			loading = false;
 			loadError = null;
+			syncHistory();
 		};
 		const onFail = (event: any) => {
 			// -3 is ERR_ABORTED, which fires when you navigate away mid-load.
@@ -82,12 +99,33 @@
 		view.addEventListener('loadstart', onStart);
 		view.addEventListener('did-finish-load', onFinish);
 		view.addEventListener('did-fail-load', onFail);
+		view.addEventListener('did-navigate', syncHistory);
+		view.addEventListener('did-navigate-in-page', syncHistory);
 
 		return () => {
 			view.removeEventListener('loadstart', onStart);
 			view.removeEventListener('did-finish-load', onFinish);
 			view.removeEventListener('did-fail-load', onFail);
+			view.removeEventListener('did-navigate', syncHistory);
+			view.removeEventListener('did-navigate-in-page', syncHistory);
+			if (webview === view) webview = null;
 		};
+	}
+
+	function goBack() {
+		try {
+			webview?.goBack();
+		} catch {
+			/* nothing to go back to */
+		}
+	}
+
+	function goForward() {
+		try {
+			webview?.goForward();
+		} catch {
+			/* nothing to go forward to */
+		}
 	}
 
 	async function runCapture() {
@@ -191,12 +229,12 @@
 <div class="app">
 	<header class="bar">
 		<div class="nav">
-			<button type="button" disabled aria-label="Back">
+			<button type="button" disabled={!canGoBack} onclick={goBack} aria-label="Back">
 				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 					<polyline points="15 18 9 12 15 6" />
 				</svg>
 			</button>
-			<button type="button" disabled aria-label="Forward">
+			<button type="button" disabled={!canGoForward} onclick={goForward} aria-label="Forward">
 				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 					<polyline points="9 18 15 12 9 6" />
 				</svg>
