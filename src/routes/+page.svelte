@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { browser } from '$app/env';
 	import type { PageResult, ThemeMode } from '../lib/types';
 
 	let url = $state('');
@@ -23,11 +23,8 @@
 	let imageState = $state<'idle' | 'working' | 'success'>('idle');
 	let progress = $state(0);
 	let error = $state<string | null>(null);
-	let ready = $state(false);
-
-	onMount(() => {
-		ready = typeof window !== 'undefined' && !!window.api;
-	});
+	// the page also opens in a plain browser during development, where the preload bridge is absent
+	const ready = browser && !!window.api;
 
 	const percent = $derived(Math.round(progress * 100));
 	const hasUrl = $derived(url.trim().length > 0);
