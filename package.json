@@ -14,6 +14,7 @@
     "dist": "pnpm build && electron-builder --linux AppImage",
     "prepare": "svelte-kit sync || echo ''",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json && tsc -p electron/tsconfig.json",
+    "test": "pnpm build && node --test --test-concurrency=1",
     "app:install": "./scripts/install.sh",
     "app:uninstall": "./scripts/uninstall.sh"
   },
