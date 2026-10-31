@@ -35,6 +35,9 @@ To build a Linux AppImage:
 pnpm dist
 ```
 
+Packaging for macOS or Windows would need their own `electron-builder` targets,
+which this project does not define. The app itself runs anywhere Electron does.
+
 If Electron fails to launch with a missing binary, run its installer directly:
 
 ```sh
@@ -52,8 +55,9 @@ node node_modules/electron/install.js
    to cancel. For a still instead of a video, press **Save image**.
 4. The result appears inline. Use **Save as** to copy it elsewhere.
 
-Both formats are written to your Videos folder. Images capture the full page,
-capped at 16000px tall.
+Both formats are written to your platform's video folder: `~/Videos` on Linux,
+`~/Movies` on macOS, and the Videos folder on Windows. Images capture the full
+page, capped at 16000px tall.
 
 ## Logged-in sites
 
@@ -95,16 +99,18 @@ bash scripts/uninstall.sh
 ```
 
 That deletes the AppImage, the desktop entry, the icon, and `~/.config/Capture`.
-It never touches your captures in `~/Videos`.
+It never touches your captures in the video folder.
 
 ## Using it over MCP
 
-The same AppImage doubles as an MCP server. With `--mcp` it skips the window and
+The packaged app doubles as an MCP server. With `--mcp` it skips the window and
 speaks JSON-RPC over stdin/stdout instead:
 
 ```sh
 ~/Applications/Capture.AppImage --mcp
 ```
+
+From a checkout the same thing runs as `npx electron . --mcp`.
 
 Add it to an MCP client with that command. For opencode:
 
@@ -143,7 +149,8 @@ All colours, spacing, radii, and type sizes live in `src/lib/theme.css`:
 | `--color-text-muted` | `#7a7e94` | secondary text |
 | `--color-accent` | `#ffd54f` | buttons, focus, slider, progress |
 | `--color-on-accent` | `#0a0a0a` | text on accent surfaces |
-| `--color-danger` | `#e06b7b` | errors |
+| `--color-danger` | `#e06b7b` | errors and the cancelling state |
+| `--color-success` | `#7ec699` | the saved state |
 
 Spacing, radii, type sizes, shadows, and transitions use the same file. The only
 raw colours left in components are the page's own white background and the
@@ -152,13 +159,20 @@ video's black.
 ## Layout
 
 ```
-electron/main.cjs         window, IPC, app:// and capture:// protocols
+electron/main.ts          entry point, picks the GUI or the MCP server
+electron/gui.ts           window, IPC, app:// and capture:// protocols
+electron/mcp.ts           MCP server over stdio
+electron/api.ts           shared capture entry point
+electron/capture.ts       page loading, frame loop, ffmpeg encoding
 electron/preload.cjs      the bridge exposed to the UI as window.api
-electron/capture.cjs      page loading, frame loop, ffmpeg encoding
+electron/tsconfig.json    type checking for the main process
 src/routes/+page.svelte   the interface
 src/lib/theme.css         design tokens
 src/lib/types.ts          shared types
 scripts/install.sh        build, install, register the desktop entry
 scripts/uninstall.sh      remove the app and its data
-assets/icon.svg        app icon source
+assets/icon.svg           app icon source
 ```
+
+The main process is TypeScript, run directly by Electron with no build step.
+`preload.cjs` is the exception: Electron's preload loader does not strip types.
