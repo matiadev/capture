@@ -9,7 +9,7 @@
 	let hideScrollbar = $state(false);
 	let theme = $state<ThemeMode>('system');
 
-	// Bumping the id remounts the webview, which reloads the page
+	// bumping the id remounts the webview, which reloads the page
 	let request = $state<{ id: number; url: string } | null>(null);
 	let requestId = 0;
 
@@ -131,7 +131,7 @@
 	async function runCapture() {
 		if (!window.api) return;
 
-		// While capturing the same button cancels
+		// while capturing the same button cancels
 		if (captureState === 'capturing') {
 			await window.api.cancel();
 			return;
@@ -159,7 +159,7 @@
 			});
 
 			if ('cancelled' in outcome) {
-				// Cancelled by the user, so keep the preview as it was
+				// cancelled by the user, keep the preview as it was
 				captureState = 'idle';
 			} else {
 				result = outcome;
@@ -210,7 +210,7 @@
 		theme = mode;
 		window.api?.setTheme(mode);
 
-		// Reload the preview so the page re-evaluates its colour preference
+		// reload the preview so the page re-evaluates its colour preference
 		if (request) {
 			request = { id: ++requestId, url: request.url };
 		}

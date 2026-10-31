@@ -1,4 +1,4 @@
-// Shared capture entry point for the GUI and the MCP server
+// shared capture entry point for the GUI and MCP server
 import { nativeTheme } from 'electron';
 import { capture, captureImage } from './capture.ts';
 import type { CaptureOptions, CaptureResult, ImageResult } from '../src/lib/types.ts';

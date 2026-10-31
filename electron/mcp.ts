@@ -5,18 +5,17 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod';
 import { renderVideo, renderImage } from './api.ts';
 
-/* Separate profile so this can run alongside the GUI without both processes
-   fighting over the same Chromium user data directory */
+// separate profile so it can run alongside the GUI
 app.setPath('userData', path.join(app.getPath('appData'), 'Capture-mcp'));
 
-// stdout carries the protocol, so every log line goes to stderr
+// stdout carries the protocol, so logs go to stderr
 const log = (message: string): void => {
 	process.stderr.write(`[capture-mcp] ${message}\n`);
 };
 
 const MAX_PREVIEW_HEIGHT = 1600;
 
-// Full-page captures are huge, so the model gets a scaled preview
+// full-page captures are huge, so the model gets a scaled preview
 interface ImageContent {
 	type: 'image';
 	data: string;
@@ -109,8 +108,5 @@ process.on('uncaughtException', (error) => {
 	log(`uncaught: ${error?.stack || error}`);
 });
 
-/* The capture window is transient, without this Electron quits once it is
-   destroyed and the server dies after one call */
-app.on('window-all-closed', () => {
-	/* keep the MCP server alive */
-});
+// Electron quits when the last window closes, which would kill the server
+app.on('window-all-closed', () => {});

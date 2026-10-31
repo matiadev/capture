@@ -21,7 +21,7 @@ function resolveFfmpeg(): string {
 	}
 
 	if (candidate) {
-		// Packaged builds keep the binary outside the asar archive
+		// packaged builds keep the binary outside the asar archive
 		const unpacked = candidate.replace('app.asar', 'app.asar.unpacked');
 		if (fs.existsSync(unpacked)) {
 			ffmpegCache = unpacked;
@@ -57,36 +57,34 @@ function slugify(input: string): string {
 	if (!base) return 'page';
 	if (base.length <= 16) return base;
 
-	// Trim to a word boundary so names stay readable
+	// trim to a word boundary so names stay readable
 	const cut = base.slice(0, 16);
 	const lastDash = cut.lastIndexOf('-');
 	return (lastDash > 8 ? cut.slice(0, lastDash) : cut).replace(/-+$/, '');
 }
 
-// Site name only, github-175134.mp4
+// site name only, github-175134.mp4
 function fileBase(href: string, title: string): string {
 	try {
 		const host = new URL(href).hostname.replace(/^www\./, '');
 		if (host) {
-			// Keep IP addresses whole, otherwise drop the domain
+			// keep IP addresses whole, otherwise drop the domain
 			const isIp = /^\d+(\.\d+){3}$/.test(host);
 			const site = isIp ? host : host.split('.')[0];
 			return site.replace(/[^a-zA-Z0-9.-]/g, '');
 		}
 	} catch {
-		/* not a URL, fall back to the title */
+		// not a URL, fall back to the title
 	}
 	return slugify(title);
 }
 
-// 175134, simple and short
 function timestamp(): string {
 	const now = new Date();
 	const pad = (n: number): string => String(n).padStart(2, '0');
 	return `${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
 }
 
-// Avoids overwriting an existing capture with the same name
 function uniquePath(dir: string, base: string, extension: string): string {
 	let candidate = path.join(dir, `${base}${extension}`);
 	let counter = 2;
@@ -99,9 +97,7 @@ function uniquePath(dir: string, base: string, extension: string): string {
 	return candidate;
 }
 
-/* in-page preparation */
-
-// Scrolls the document once so lazy content loads, then measures
+// scrolls once so lazy content loads, then measures
 const PREPARE = `(async () => {
 	const doc = document.documentElement;
 	const previous = doc.style.scrollBehavior;
@@ -140,7 +136,7 @@ const PREPARE = `(async () => {
 	};
 })()`;
 
-// Re-injected after a reload, since the style dies with the document
+// re-injected after a reload, the style dies with the document
 const CLEAN_CSS = `(() => {
 	if (document.getElementById('__capture_clean')) return true;
 	const style = document.createElement('style');
@@ -162,7 +158,7 @@ const MEASURE = `(async () => {
 	};
 })()`;
 
-/* Reloading restarts entry animations that the warm-up scroll already played */
+// reload restarts entry animations the warm-up scroll already played
 function reloadAndWait(win: BrowserWindow, timeoutMs = 15000): Promise<void> {
 	return new Promise<void>((resolve, reject) => {
 		let settled = false;
@@ -218,8 +214,7 @@ async function openPage({ url, width, height }: OpenPageOptions): Promise<Browse
 		show: false,
 		backgroundColor: '#ffffff',
 		webPreferences: {
-			/* Must match the preview partition so a login carries into the capture,
-			   and no persist prefix so the session is dropped on exit */
+			// same partition as the preview, no persist prefix so it clears on exit
 			partition: 'capture',
 			offscreen: true,
 			backgroundThrottling: false,
@@ -273,7 +268,6 @@ async function capture(
 		onProgress({ progress: 0 });
 		const info = await win.webContents.executeJavaScript(PREPARE, true);
 
-		/* The warm-up scroll fires entry animations, so reload to replay them */
 		await reloadAndWait(win);
 		await win.webContents.executeJavaScript(CLEAN_CSS, true);
 
@@ -337,7 +331,7 @@ async function capture(
 					);
 				});
 
-				// We may abort before awaiting this, so keep the rejection handled
+				// we may abort before awaiting this, so keep the rejection handled
 				done.catch(() => {});
 			}
 
@@ -412,7 +406,7 @@ async function captureImage({
 		let image = await win.webContents.capturePage();
 		let size = image.getSize();
 
-		// Some pages ignore the resize, so fall back to the viewport
+		// some pages ignore the resize, fall back to the viewport
 		if (size.height < 50) {
 			win.setContentSize(width, height);
 			await sleep(300);

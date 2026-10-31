@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Removes the app and its data, saved captures are never touched
+# removes the app and its data, saved captures are never touched
 set -euo pipefail
 
 APP_NAME="Capture"
