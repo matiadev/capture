@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Installs the built AppImage into ~/Applications and registers a desktop entry.
+# Installs the built AppImage into ~/Applications and registers a desktop entry
 set -euo pipefail
 
 APP_NAME="Capture"

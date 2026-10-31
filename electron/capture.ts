@@ -8,8 +8,6 @@ import type { CaptureOptions, CaptureResult, ImageResult } from '../src/lib/type
 
 const requireModule = createRequire(import.meta.url);
 
-/* ---------- ffmpeg ---------- */
-
 let ffmpegCache: string | null = null;
 
 function resolveFfmpeg(): string {
@@ -23,7 +21,7 @@ function resolveFfmpeg(): string {
 	}
 
 	if (candidate) {
-		// Packaged builds keep the binary outside the asar archive.
+		// Packaged builds keep the binary outside the asar archive
 		const unpacked = candidate.replace('app.asar', 'app.asar.unpacked');
 		if (fs.existsSync(unpacked)) {
 			ffmpegCache = unpacked;
@@ -38,8 +36,6 @@ function resolveFfmpeg(): string {
 	ffmpegCache = 'ffmpeg';
 	return ffmpegCache;
 }
-
-/* ---------- helpers ---------- */
 
 const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -61,18 +57,18 @@ function slugify(input: string): string {
 	if (!base) return 'page';
 	if (base.length <= 16) return base;
 
-	// Trim to a word boundary so names stay readable.
+	// Trim to a word boundary so names stay readable
 	const cut = base.slice(0, 16);
 	const lastDash = cut.lastIndexOf('-');
 	return (lastDash > 8 ? cut.slice(0, lastDash) : cut).replace(/-+$/, '');
 }
 
-// Site name only: github-175134.mp4
+// Site name only, github-175134.mp4
 function fileBase(href: string, title: string): string {
 	try {
 		const host = new URL(href).hostname.replace(/^www\./, '');
 		if (host) {
-			// Keep IP addresses whole, otherwise drop the domain.
+			// Keep IP addresses whole, otherwise drop the domain
 			const isIp = /^\d+(\.\d+){3}$/.test(host);
 			const site = isIp ? host : host.split('.')[0];
 			return site.replace(/[^a-zA-Z0-9.-]/g, '');
@@ -83,14 +79,14 @@ function fileBase(href: string, title: string): string {
 	return slugify(title);
 }
 
-// 175134, simple and short.
+// 175134, simple and short
 function timestamp(): string {
 	const now = new Date();
 	const pad = (n: number): string => String(n).padStart(2, '0');
 	return `${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
 }
 
-// Avoids overwriting an existing capture with the same name.
+// Avoids overwriting an existing capture with the same name
 function uniquePath(dir: string, base: string, extension: string): string {
 	let candidate = path.join(dir, `${base}${extension}`);
 	let counter = 2;
@@ -103,9 +99,9 @@ function uniquePath(dir: string, base: string, extension: string): string {
 	return candidate;
 }
 
-/* ---------- in-page preparation ---------- */
+/* in-page preparation */
 
-// Scrolls the whole document once so lazy content loads, then returns measurements.
+// Scrolls the document once so lazy content loads, then measures
 const PREPARE = `(async () => {
 	const doc = document.documentElement;
 	const previous = doc.style.scrollBehavior;
@@ -144,7 +140,7 @@ const PREPARE = `(async () => {
 	};
 })()`;
 
-// Re-injected after a reload, since the warm-up style dies with the document.
+// Re-injected after a reload, since the style dies with the document
 const CLEAN_CSS = `(() => {
 	if (document.getElementById('__capture_clean')) return true;
 	const style = document.createElement('style');
@@ -166,8 +162,7 @@ const MEASURE = `(async () => {
 	};
 })()`;
 
-// Reloading restarts the page's entry animations, which the warm-up scroll
-// would otherwise have already played out before the first frame.
+/* Reloading restarts entry animations that the warm-up scroll already played */
 function reloadAndWait(win: BrowserWindow, timeoutMs = 15000): Promise<void> {
 	return new Promise<void>((resolve, reject) => {
 		let settled = false;
@@ -209,8 +204,6 @@ function scrollScript(y: number): string {
 	})()`;
 }
 
-/* ---------- page window ---------- */
-
 interface OpenPageOptions {
 	url: string;
 	width: number;
@@ -225,9 +218,8 @@ async function openPage({ url, width, height }: OpenPageOptions): Promise<Browse
 		show: false,
 		backgroundColor: '#ffffff',
 		webPreferences: {
-			// Must match the partition on the preview webview, so a login done
-			// in the preview is also present when capturing. No `persist:` prefix,
-			// so the session is dropped when the app exits.
+			/* Must match the preview partition so a login carries into the capture,
+			   and no persist prefix so the session is dropped on exit */
 			partition: 'capture',
 			offscreen: true,
 			backgroundThrottling: false,
@@ -253,8 +245,6 @@ async function openPage({ url, width, height }: OpenPageOptions): Promise<Browse
 	win.destroy();
 	throw lastError;
 }
-
-/* ---------- capture ---------- */
 
 function cancelledError(): Error {
 	const error = new Error('Capture cancelled');
@@ -283,8 +273,7 @@ async function capture(
 		onProgress({ progress: 0 });
 		const info = await win.webContents.executeJavaScript(PREPARE, true);
 
-		// The warm-up scroll loads lazy content, but it also fires every
-		// scroll-triggered animation. Reload so they replay during the capture.
+		/* The warm-up scroll fires entry animations, so reload to replay them */
 		await reloadAndWait(win);
 		await win.webContents.executeJavaScript(CLEAN_CSS, true);
 
@@ -296,8 +285,6 @@ async function capture(
 		const name = `${fileBase(info.href, fresh.title || info.title)}-${timestamp()}`;
 		outPath = uniquePath(capturesDir(), name, '.mp4');
 		const fileName = path.basename(outPath);
-
-
 
 		onProgress({ progress: 0 });
 
@@ -311,7 +298,7 @@ async function capture(
 
 			const image = await win.webContents.capturePage();
 
-			// PNG keeps the intermediate lossless; encoding is not the bottleneck.
+			// PNG keeps the intermediate lossless, encoding is not the bottleneck
 			const png = image.toPNG();
 
 			if (!ffmpeg) {
@@ -350,7 +337,7 @@ async function capture(
 					);
 				});
 
-				// We may abort before awaiting this, so keep the rejection handled.
+				// We may abort before awaiting this, so keep the rejection handled
 				done.catch(() => {});
 			}
 
@@ -389,14 +376,12 @@ async function capture(
 			try {
 				ffmpeg.kill('SIGKILL');
 			} catch {
-				/* already gone */
 			}
 		}
 		if (outPath) {
 			try {
 				fs.unlinkSync(outPath);
 			} catch {
-				/* nothing written */
 			}
 		}
 		throw error;
@@ -405,7 +390,7 @@ async function capture(
 	}
 }
 
-// Chromium caps a rendered surface around 16384px, so the full-page shot is capped too.
+// Chromium caps a surface near 16384px, so the full-page shot is capped too
 const MAX_IMAGE_HEIGHT = 16000;
 
 async function captureImage({
@@ -427,7 +412,7 @@ async function captureImage({
 		let image = await win.webContents.capturePage();
 		let size = image.getSize();
 
-		// Some pages ignore the resize, so fall back to the visible viewport.
+		// Some pages ignore the resize, so fall back to the viewport
 		if (size.height < 50) {
 			win.setContentSize(width, height);
 			await sleep(300);

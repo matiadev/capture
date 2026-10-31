@@ -9,7 +9,7 @@
 	let hideScrollbar = $state(false);
 	let theme = $state<ThemeMode>('system');
 
-	// Bumping the id remounts the webview, which reloads the page.
+	// Bumping the id remounts the webview, which reloads the page
 	let request = $state<{ id: number; url: string } | null>(null);
 	let requestId = 0;
 
@@ -90,7 +90,7 @@
 			syncHistory();
 		};
 		const onFail = (event: any) => {
-			// -3 is ERR_ABORTED, which fires when you navigate away mid-load.
+			// -3 is ERR_ABORTED, fired when navigating away mid-load
 			if (event.errorCode === -3) return;
 			loading = false;
 			loadError = event.errorDescription || 'The page could not be loaded.';
@@ -131,7 +131,7 @@
 	async function runCapture() {
 		if (!window.api) return;
 
-		// While capturing, the same button cancels.
+		// While capturing the same button cancels
 		if (captureState === 'capturing') {
 			await window.api.cancel();
 			return;
@@ -159,7 +159,7 @@
 			});
 
 			if ('cancelled' in outcome) {
-				// Cancelled by the user, so keep the preview as it was.
+				// Cancelled by the user, so keep the preview as it was
 				captureState = 'idle';
 			} else {
 				result = outcome;
@@ -210,7 +210,7 @@
 		theme = mode;
 		window.api?.setTheme(mode);
 
-		// Reload the preview so the page re-evaluates its colour preference.
+		// Reload the preview so the page re-evaluates its colour preference
 		if (request) {
 			request = { id: ++requestId, url: request.url };
 		}
@@ -470,7 +470,7 @@
 		background: var(--color-bg);
 	}
 
-	/* ---------- top bar ---------- */
+	/* top bar */
 
 	.bar {
 		display: flex;
@@ -568,7 +568,7 @@
 		cursor: default;
 	}
 
-	/* ---------- stage ---------- */
+	/* stage */
 
 	.stage {
 		position: relative;
@@ -606,7 +606,7 @@
 		font-size: 13.5px;
 	}
 
-	/* ---------- loading ---------- */
+	/* loading */
 
 	.loading-bar {
 		position: absolute;
@@ -634,7 +634,7 @@
 		}
 	}
 
-	/* ---------- result ---------- */
+	/* result */
 
 	.result {
 		min-height: 100%;
@@ -710,7 +710,7 @@
 		color: var(--color-text);
 	}
 
-	/* ---------- toast ---------- */
+	/* toast */
 
 	.toast {
 		position: absolute;
@@ -741,7 +741,7 @@
 		opacity: 1;
 	}
 
-	/* ---------- capture bar ---------- */
+	/* capture bar */
 
 	.capture-bar {
 		position: absolute;

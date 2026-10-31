@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
-# Removes the app installed by install.sh, plus its app data.
-# Saved captures are never touched.
+# Removes the app and its data, saved captures are never touched
 set -euo pipefail
 
 APP_NAME="Capture"

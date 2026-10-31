@@ -19,15 +19,15 @@ const isDev = !app.isPackaged && process.env.CAPTURE_PROD !== '1';
 const DEV_URL = process.env.CAPTURE_DEV_URL || 'http://127.0.0.1:5173';
 const BUILD_DIR = path.join(import.meta.dirname, '..', 'build');
 
-// No application menu: the window is just the capture UI.
-// macOS still needs one for standard shortcuts, but it lives in the system bar.
+/* No application menu, the window is just the capture UI. macOS still needs one
+   for standard shortcuts but it lives in the system bar */
 if (process.platform === 'darwin') {
 	Menu.setApplicationMenu(Menu.buildFromTemplate([{ role: 'appMenu' }, { role: 'editMenu' }]));
 } else {
 	Menu.setApplicationMenu(null);
 }
 
-// Two instances would fight over the same user data directory.
+// Two instances would fight over the same user data directory
 const gotLock = app.requestSingleInstanceLock();
 if (!gotLock) app.quit();
 
@@ -39,14 +39,10 @@ app.on('second-instance', () => {
 	mainWindow.focus();
 });
 
-/* ---------- local protocols ---------- */
-
 protocol.registerSchemesAsPrivileged([
 	{ scheme: 'app', privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true } },
 	{ scheme: 'capture', privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true } }
 ]);
-
-/* ---------- main window ---------- */
 
 function createWindow(): void {
 	const win = new BrowserWindow({
@@ -69,7 +65,7 @@ function createWindow(): void {
 
 	win.once('ready-to-show', () => win.show());
 
-	// With no application menu there are no default accelerators, so wire quit manually.
+	// No menu means no default accelerators, so wire quit manually
 	win.webContents.on('before-input-event', (event, input) => {
 		const accel = process.platform === 'darwin' ? input.meta : input.control;
 		if (accel && !input.alt && !input.shift && input.key.toLowerCase() === 'q') {
@@ -88,8 +84,6 @@ function createWindow(): void {
 		mainWindow = null;
 	});
 }
-
-/* ---------- ipc ---------- */
 
 let activeCapture: AbortController | null = null;
 
@@ -124,7 +118,7 @@ ipcMain.handle('capture:image', async (_event, options) => {
 	return renderImage(options);
 });
 
-// Drives prefers-color-scheme for both the preview and the capture window.
+// Drives prefers-color-scheme for the preview and the capture window
 ipcMain.handle('theme:set', (_event, mode) => {
 	if (mode === 'light' || mode === 'dark' || mode === 'system') {
 		nativeTheme.themeSource = mode;
@@ -157,15 +151,13 @@ ipcMain.handle('capture:reveal', async (_event, filePath) => {
 	shell.showItemInFolder(filePath);
 });
 
-/* ---------- lifecycle ---------- */
-
 app.whenReady().then(() => {
 	if (!gotLock) return;
 
-	// Pages follow the system preference until the Theme selector overrides it.
+	// Pages follow the system preference until the theme selector overrides it
 	nativeTheme.themeSource = 'system';
 
-	// Serves the built UI. Absolute asset paths resolve against the app:// origin.
+	// Serves the built UI, absolute asset paths resolve against the app origin
 	protocol.handle('app', (request) => {
 		let pathname = decodeURIComponent(new URL(request.url).pathname);
 		if (!pathname || pathname === '/') pathname = '/index.html';
@@ -184,7 +176,7 @@ app.whenReady().then(() => {
 		return net.fetch(pathToFileURL(target).toString());
 	});
 
-	// Serves finished videos, with range requests so the player can seek.
+	// Serves finished videos with range requests so the player can seek
 	protocol.handle('capture', (request) => {
 		const name = decodeURIComponent(new URL(request.url).pathname.replace(/^\//, ''));
 		const file = path.join(capturesDir(), path.basename(name));

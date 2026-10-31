@@ -7,7 +7,7 @@ export default defineConfig({
 		sveltekit({
 			compilerOptions: {
 				experimental: { async: true },
-				// Force runes mode for the project, except for libraries. Can be removed in svelte 6.
+				// Force runes mode except for libraries, can be dropped in Svelte 6
 				runes: ({ filename }) =>
 					filename.split(/[/\\]/).includes('node_modules') ? undefined : true
 			},
