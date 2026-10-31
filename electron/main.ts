@@ -1,6 +1,6 @@
 // Entry point. `--mcp` runs the MCP server, anything else opens the app.
 if (process.argv.includes('--mcp')) {
-	require('./mcp.cjs');
+	void import('./mcp.ts');
 } else {
-	require('./gui.cjs');
+	void import('./gui.ts');
 }

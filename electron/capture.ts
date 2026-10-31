@@ -1,18 +1,24 @@
-const { BrowserWindow, app } = require('electron');
-const { spawn } = require('node:child_process');
-const fs = require('node:fs');
-const path = require('node:path');
+import { BrowserWindow, app } from 'electron';
+import { spawn, type ChildProcess } from 'node:child_process';
+import type { Writable } from 'node:stream';
+import { createRequire } from 'node:module';
+import fs from 'node:fs';
+import path from 'node:path';
+
+import type { CaptureOptions, CaptureResult, ImageResult, PageInfo } from '../src/lib/types.ts';
+
+const requireModule = createRequire(import.meta.url);
 
 /* ---------- ffmpeg ---------- */
 
-let ffmpegCache = null;
+let ffmpegCache: string | null = null;
 
-function resolveFfmpeg() {
+function resolveFfmpeg(): string {
 	if (ffmpegCache) return ffmpegCache;
 
-	let candidate = null;
+	let candidate: string | null = null;
 	try {
-		candidate = require('ffmpeg-static');
+		candidate = requireModule('ffmpeg-static') as string;
 	} catch {
 		candidate = null;
 	}
@@ -36,18 +42,18 @@ function resolveFfmpeg() {
 
 /* ---------- helpers ---------- */
 
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
 
-const easeInOutCubic = (t) =>
+const easeInOutCubic = (t: number): number =>
 	t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
-function capturesDir() {
+function capturesDir(): string {
 	const dir = app.getPath('videos');
 	fs.mkdirSync(dir, { recursive: true });
 	return dir;
 }
 
-function slugify(input) {
+function slugify(input: string): string {
 	const base = String(input || 'page')
 		.toLowerCase()
 		.replace(/[^a-z0-9]+/g, '-')
@@ -63,7 +69,7 @@ function slugify(input) {
 }
 
 // Site name only: github-175134.mp4
-function fileBase(href, title) {
+function fileBase(href: string, title: string): string {
 	try {
 		const host = new URL(href).hostname.replace(/^www\./, '');
 		if (host) {
@@ -79,14 +85,14 @@ function fileBase(href, title) {
 }
 
 // 175134, simple and short.
-function timestamp() {
+function timestamp(): string {
 	const now = new Date();
-	const pad = (n) => String(n).padStart(2, '0');
+	const pad = (n: number): string => String(n).padStart(2, '0');
 	return `${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
 }
 
 // Avoids overwriting an existing capture with the same name.
-function uniquePath(dir, base, extension) {
+function uniquePath(dir: string, base: string, extension: string): string {
 	let candidate = path.join(dir, `${base}${extension}`);
 	let counter = 2;
 
@@ -163,11 +169,11 @@ const MEASURE = `(async () => {
 
 // Reloading restarts the page's entry animations, which the warm-up scroll
 // would otherwise have already played out before the first frame.
-function reloadAndWait(win, timeoutMs = 15000) {
-	return new Promise((resolve, reject) => {
+function reloadAndWait(win: BrowserWindow, timeoutMs = 15000): Promise<void> {
+	return new Promise<void>((resolve, reject) => {
 		let settled = false;
 
-		const finish = (error) => {
+		const finish = (error?: Error): void => {
 			if (settled) return;
 			settled = true;
 			clearTimeout(timer);
@@ -178,7 +184,13 @@ function reloadAndWait(win, timeoutMs = 15000) {
 		};
 
 		const onLoad = () => finish();
-		const onFail = (_event, code, description, _url, isMainFrame) => {
+		const onFail = (
+			_event: Electron.Event,
+			code: number,
+			description: string,
+			_url: string,
+			isMainFrame: boolean
+		): void => {
 			if (isMainFrame === false) return;
 			finish(new Error(description || `Reload failed (${code})`));
 		};
@@ -191,7 +203,7 @@ function reloadAndWait(win, timeoutMs = 15000) {
 	});
 }
 
-function scrollScript(y) {
+function scrollScript(y: number): string {
 	return `(async () => {
 		window.scrollTo({ top: ${y}, behavior: 'instant' });
 		await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
@@ -200,7 +212,13 @@ function scrollScript(y) {
 
 /* ---------- page window ---------- */
 
-async function openPage({ url, width, height }) {
+interface OpenPageOptions {
+	url: string;
+	width: number;
+	height: number;
+}
+
+async function openPage({ url, width, height }: OpenPageOptions): Promise<BrowserWindow> {
 	const win = new BrowserWindow({
 		width,
 		height,
@@ -222,10 +240,10 @@ async function openPage({ url, width, height }) {
 
 	win.webContents.setFrameRate(60);
 
-	let lastError;
+	let lastError: unknown;
 	for (let attempt = 0; attempt < 3; attempt++) {
 		try {
-			await win.loadURL(url, { timeout: 45000 });
+			await win.loadURL(url);
 			return win;
 		} catch (error) {
 			lastError = error;
@@ -239,22 +257,26 @@ async function openPage({ url, width, height }) {
 
 /* ---------- capture ---------- */
 
-function cancelledError() {
+function cancelledError(): Error {
 	const error = new Error('Capture cancelled');
 	error.name = 'AbortError';
 	return error;
 }
 
+type ProgressCallback = (progress: { progress: number }) => void;
+
 async function capture(
-	{ url, width = 1440, height = 900, duration = 10, fps = 60 },
-	onProgress = () => {},
-	signal
-) {
+	{ url, width = 1440, height = 900, duration = 10, fps = 60 }: CaptureOptions,
+	onProgress: ProgressCallback = () => {},
+	signal?: AbortSignal
+): Promise<Omit<CaptureResult, 'url'>> {
 	const win = await openPage({ url, width, height });
 	const frames = Math.max(2, Math.round(duration * fps));
 
-	let outPath = null;
-	let ffmpeg = null;
+	let outPath: string | null = null;
+	let ffmpeg: ChildProcess | null = null;
+	let ffmpegIn: Writable | null = null;
+	let done: Promise<void> | null = null;
 
 	try {
 		if (signal?.aborted) throw cancelledError();
@@ -276,7 +298,7 @@ async function capture(
 		outPath = uniquePath(capturesDir(), name, '.mp4');
 		const fileName = path.basename(outPath);
 
-		let done = null;
+
 
 		onProgress({ progress: 0 });
 
@@ -309,14 +331,20 @@ async function capture(
 					outPath
 				]);
 
+				if (!ffmpeg.stdin || !ffmpeg.stderr) {
+					throw new Error('ffmpeg pipes unavailable');
+				}
+
+				ffmpegIn = ffmpeg.stdin;
 				let ffmpegError = '';
-				ffmpeg.stderr.on('data', (d) => {
+				ffmpeg.stderr.on('data', (d: Buffer) => {
 					ffmpegError += d.toString();
 				});
 
-				done = new Promise((resolve, reject) => {
-					ffmpeg.on('error', reject);
-					ffmpeg.on('close', (code) =>
+				const encoder = ffmpeg;
+				done = new Promise<void>((resolve, reject) => {
+					encoder.on('error', reject);
+					encoder.on('close', (code: number | null) =>
 						code === 0
 							? resolve()
 							: reject(new Error(ffmpegError || `ffmpeg exited with ${code}`))
@@ -327,8 +355,10 @@ async function capture(
 				done.catch(() => {});
 			}
 
-			if (!ffmpeg.stdin.write(png)) {
-				await new Promise((r) => ffmpeg.stdin.once('drain', r));
+			const out = ffmpegIn;
+			if (!out) throw new Error('ffmpeg stdin unavailable');
+			if (!out.write(png)) {
+				await new Promise((resolve) => out.once('drain', resolve));
 			}
 
 			if (i % 5 === 0 || i === frames - 1) {
@@ -336,7 +366,8 @@ async function capture(
 			}
 		}
 
-		ffmpeg.stdin.end();
+		if (!ffmpegIn || !done) throw new Error('encoder never started');
+		ffmpegIn.end();
 		await done;
 
 		const stat = fs.statSync(outPath);
@@ -378,7 +409,11 @@ async function capture(
 // Chromium caps a rendered surface around 16384px, so the full-page shot is capped too.
 const MAX_IMAGE_HEIGHT = 16000;
 
-async function captureImage({ url, width = 1440, height = 900 }) {
+async function captureImage({
+	url,
+	width = 1440,
+	height = 900
+}: CaptureOptions): Promise<Omit<ImageResult, 'url'>> {
 	const win = await openPage({ url, width, height });
 
 	try {
@@ -422,4 +457,4 @@ async function captureImage({ url, width = 1440, height = 900 }) {
 	}
 }
 
-module.exports = { capture, captureImage, capturesDir };
+export { capture, captureImage, capturesDir };

@@ -1,4 +1,4 @@
-const {
+import {
 	app,
 	BrowserWindow,
 	Menu,
@@ -8,16 +8,16 @@ const {
 	dialog,
 	shell,
 	nativeTheme
-} = require('electron');
-const path = require('node:path');
-const fs = require('node:fs');
-const { pathToFileURL } = require('node:url');
-const { capturesDir } = require('./capture.cjs');
-const { renderVideo, renderImage } = require('./api.cjs');
+} from 'electron';
+import path from 'node:path';
+import fs from 'node:fs';
+import { pathToFileURL } from 'node:url';
+import { capturesDir } from './capture.ts';
+import { renderVideo, renderImage } from './api.ts';
 
 const isDev = !app.isPackaged && process.env.CAPTURE_PROD !== '1';
 const DEV_URL = process.env.CAPTURE_DEV_URL || 'http://127.0.0.1:5173';
-const BUILD_DIR = path.join(__dirname, '..', 'build');
+const BUILD_DIR = path.join(import.meta.dirname, '..', 'build');
 
 // No application menu: the window is just the capture UI.
 // macOS still needs one for standard shortcuts, but it lives in the system bar.
@@ -31,7 +31,7 @@ if (process.platform === 'darwin') {
 const gotLock = app.requestSingleInstanceLock();
 if (!gotLock) app.quit();
 
-let mainWindow = null;
+let mainWindow: BrowserWindow | null = null;
 
 app.on('second-instance', () => {
 	if (!mainWindow) return;
@@ -48,8 +48,8 @@ protocol.registerSchemesAsPrivileged([
 
 /* ---------- main window ---------- */
 
-function createWindow() {
-	mainWindow = new BrowserWindow({
+function createWindow(): void {
+	const win = new BrowserWindow({
 		width: 1440,
 		height: 900,
 		minWidth: 960,
@@ -58,17 +58,19 @@ function createWindow() {
 		show: false,
 		autoHideMenuBar: true,
 		webPreferences: {
-			preload: path.join(__dirname, 'preload.cjs'),
+			preload: path.join(import.meta.dirname, 'preload.cjs'),
 			contextIsolation: true,
 			nodeIntegration: false,
 			webviewTag: true
 		}
 	});
 
-	mainWindow.once('ready-to-show', () => mainWindow.show());
+	mainWindow = win;
+
+	win.once('ready-to-show', () => win.show());
 
 	// With no application menu there are no default accelerators, so wire quit manually.
-	mainWindow.webContents.on('before-input-event', (event, input) => {
+	win.webContents.on('before-input-event', (event, input) => {
 		const accel = process.platform === 'darwin' ? input.meta : input.control;
 		if (accel && !input.alt && !input.shift && input.key.toLowerCase() === 'q') {
 			event.preventDefault();
@@ -77,19 +79,19 @@ function createWindow() {
 	});
 
 	if (isDev) {
-		mainWindow.loadURL(DEV_URL);
+		win.loadURL(DEV_URL);
 	} else {
-		mainWindow.loadURL('app://bundle/');
+		win.loadURL('app://bundle/');
 	}
 
-	mainWindow.on('closed', () => {
+	win.on('closed', () => {
 		mainWindow = null;
 	});
 }
 
 /* ---------- ipc ---------- */
 
-let activeCapture = null;
+let activeCapture: AbortController | null = null;
 
 ipcMain.handle('capture:run', async (event, options) => {
 	const controller = new AbortController();
@@ -106,7 +108,7 @@ ipcMain.handle('capture:run', async (event, options) => {
 			controller.signal
 		);
 	} catch (error) {
-		if (error?.name === 'AbortError') return { cancelled: true };
+		if (error instanceof Error && error.name === 'AbortError') return { cancelled: true };
 		throw error;
 	} finally {
 		activeCapture = null;
@@ -130,7 +132,9 @@ ipcMain.handle('theme:set', (_event, mode) => {
 	return nativeTheme.themeSource;
 });
 
-ipcMain.handle('capture:save-as', async (_event, filePath) => {
+ipcMain.handle('capture:save-as', async (_event, filePath: string) => {
+	if (!mainWindow) return null;
+
 	const isImage = path.extname(filePath).toLowerCase() === '.png';
 
 	const { canceled, filePath: target } = await dialog.showSaveDialog(mainWindow, {

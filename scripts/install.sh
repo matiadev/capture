@@ -22,7 +22,7 @@ SRC="$(ls -t "${ROOT}"/dist/*.AppImage | head -1)"
 mkdir -p "${APP_DIR}" "${DESKTOP_DIR}" "${ICON_DIR}"
 
 install -m 755 "${SRC}" "${APPIMAGE}"
-install -m 644 "${ROOT}/resources/icon.png" "${ICON}"
+install -m 644 "${ROOT}/assets/icon.png" "${ICON}"
 
 cat > "${DESKTOP}" <<EOF
 [Desktop Entry]

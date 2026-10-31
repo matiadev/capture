@@ -162,5 +162,5 @@ src/lib/theme.css         design tokens
 src/lib/types.ts          shared types
 scripts/install.sh        build, install, register the desktop entry
 scripts/uninstall.sh      remove the app and its data
-resources/icon.svg        app icon source
+assets/icon.svg        app icon source
 ```

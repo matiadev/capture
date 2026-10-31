@@ -1,21 +1,29 @@
-const { app, nativeImage } = require('electron');
-const path = require('node:path');
-const { McpServer } = require('@modelcontextprotocol/sdk/server/mcp.js');
-const { StdioServerTransport } = require('@modelcontextprotocol/sdk/server/stdio.js');
-const { z } = require('zod');
-const { renderVideo, renderImage } = require('./api.cjs');
+import { app, nativeImage } from 'electron';
+import path from 'node:path';
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { z } from 'zod';
+import { renderVideo, renderImage } from './api.ts';
 
 // A separate profile so this can run alongside the GUI without both processes
 // fighting over the same Chromium user data directory.
 app.setPath('userData', path.join(app.getPath('appData'), 'Capture-mcp'));
 
 // stdout carries the protocol, so every log line goes to stderr.
-const log = (message) => process.stderr.write(`[capture-mcp] ${message}\n`);
+const log = (message: string): void => {
+	process.stderr.write(`[capture-mcp] ${message}\n`);
+};
 
 const MAX_PREVIEW_HEIGHT = 1600;
 
 // Full-page captures can be huge, so the model gets a scaled preview, not the original.
-function previewBlock(filePath) {
+interface ImageContent {
+	type: 'image';
+	data: string;
+	mimeType: string;
+}
+
+function previewBlock(filePath: string): ImageContent[] {
 	try {
 		const image = nativeImage.createFromPath(filePath);
 		if (image.isEmpty()) return [];
