@@ -278,21 +278,12 @@ async function capture(
 
 		let done = null;
 
-		// The loop cannot hit the requested frame rate, so drive the scroll by
-		// wall-clock time and repeat each captured frame enough times to keep
-		// the output timeline on real time. Page animations then run at the
-		// right speed instead of being sped up by the capture rate.
-		const frameInterval = 1000 / fps;
-		const startedAt = Date.now();
-		let written = 0;
-
 		onProgress({ progress: 0 });
 
-		while (written < frames) {
+		for (let i = 0; i < frames; i++) {
 			if (signal?.aborted) throw cancelledError();
 
-			const elapsed = Date.now() - startedAt;
-			const t = Math.min(1, elapsed / (duration * 1000));
+			const t = frames === 1 ? 1 : i / (frames - 1);
 			const y = Math.round(easeInOutCubic(t) * maxScroll);
 
 			await win.webContents.executeJavaScript(scrollScript(y), true);
@@ -336,17 +327,13 @@ async function capture(
 				done.catch(() => {});
 			}
 
-			// How many output frames should exist by now.
-			const target = Math.min(frames, Math.floor(elapsed / frameInterval) + 1);
-
-			while (written < target) {
-				if (!ffmpeg.stdin.write(png)) {
-					await new Promise((r) => ffmpeg.stdin.once('drain', r));
-				}
-				written += 1;
+			if (!ffmpeg.stdin.write(png)) {
+				await new Promise((r) => ffmpeg.stdin.once('drain', r));
 			}
 
-			onProgress({ progress: written / frames });
+			if (i % 5 === 0 || i === frames - 1) {
+				onProgress({ progress: (i + 1) / frames });
+			}
 		}
 
 		ffmpeg.stdin.end();
