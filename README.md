@@ -97,6 +97,39 @@ bash scripts/uninstall.sh
 That deletes the AppImage, the desktop entry, the icon, and `~/.config/Capture`.
 It never touches your captures in `~/Videos`.
 
+## Using it over MCP
+
+The same AppImage doubles as an MCP server. With `--mcp` it skips the window and
+speaks JSON-RPC over stdin/stdout instead:
+
+```sh
+~/Applications/Capture.AppImage --mcp
+```
+
+Add it to an MCP client with that command. For opencode:
+
+```jsonc
+"mcp": {
+  "servers": {
+    "capture": {
+      "type": "local",
+      "command": ["/home/matia/Applications/Capture.AppImage", "--mcp"]
+    }
+  }
+}
+```
+
+Two tools are exposed:
+
+| Tool | Arguments | Returns |
+|---|---|---|
+| `capture_video` | `url`, `width?`, `duration?`, `fps?`, `theme?` | file path |
+| `capture_image` | `url`, `width?`, `theme?` | file path plus a scaled preview |
+
+The MCP server runs with its own user data directory (`~/.config/Capture-mcp`) so
+it can run at the same time as the window without both fighting over the profile.
+It still needs a display server, so on a headless machine run it under `xvfb-run`.
+
 ## Design tokens
 
 Colours come from the Poimandres Yellow KDE scheme
