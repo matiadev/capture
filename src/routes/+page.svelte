@@ -339,11 +339,16 @@
 	<div class="capture-bar">
 		<label class="ctl">
 			<span>Width</span>
-			<select bind:value={viewportWidth} disabled={capturing}>
-				<option value={1280}>1280 px</option>
-				<option value={1440}>1440 px</option>
-				<option value={1920}>1920 px</option>
-			</select>
+			<span class="field">
+				<select bind:value={viewportWidth} disabled={capturing}>
+					<option value={1280}>1280 px</option>
+					<option value={1440}>1440 px</option>
+					<option value={1920}>1920 px</option>
+				</select>
+				<svg class="chevron" viewBox="0 0 12 12" aria-hidden="true">
+					<path d="M2 4l4 4 4-4" />
+				</svg>
+			</span>
 		</label>
 
 		<div class="divider"></div>
@@ -360,25 +365,35 @@
 
 		<label class="ctl">
 			<span>Frame rate</span>
-			<select bind:value={fps} disabled={capturing}>
-				<option value={30}>30 fps</option>
-				<option value={60}>60 fps</option>
-			</select>
+			<span class="field">
+				<select bind:value={fps} disabled={capturing}>
+					<option value={30}>30 fps</option>
+					<option value={60}>60 fps</option>
+				</select>
+				<svg class="chevron" viewBox="0 0 12 12" aria-hidden="true">
+					<path d="M2 4l4 4 4-4" />
+				</svg>
+			</span>
 		</label>
 
 		<div class="divider"></div>
 
 		<label class="ctl">
 			<span>Theme</span>
-			<select
-				value={theme}
-				disabled={capturing}
-				onchange={(event) => setTheme(event.currentTarget.value as ThemeMode)}
-			>
-				<option value="system">System</option>
-				<option value="light">Light</option>
-				<option value="dark">Dark</option>
-			</select>
+			<span class="field">
+				<select
+					value={theme}
+					disabled={capturing}
+					onchange={(event) => setTheme(event.currentTarget.value as ThemeMode)}
+				>
+					<option value="system">System</option>
+					<option value="light">Light</option>
+					<option value="dark">Dark</option>
+				</select>
+				<svg class="chevron" viewBox="0 0 12 12" aria-hidden="true">
+					<path d="M2 4l4 4 4-4" />
+				</svg>
+			</span>
 		</label>
 
 		<div class="divider"></div>
@@ -775,13 +790,14 @@
 		}
 
 		& select {
+			appearance: none;
 			background: transparent;
 			border: none;
 			color: var(--color-text);
 			font-size: var(--text-base);
 			font-weight: var(--weight-medium);
 			outline: none;
-			padding: 0;
+			padding: 0 16px 0 0;
 			cursor: pointer;
 
 			&:disabled {
@@ -794,6 +810,26 @@
 				color: var(--color-text);
 			}
 		}
+
+		& .field {
+			position: relative;
+			display: flex;
+
+			& .chevron {
+				position: absolute;
+				top: 50%;
+				right: 0;
+				width: 12px;
+				height: 12px;
+				transform: translateY(-50%);
+				fill: none;
+				stroke: var(--color-text-dim);
+				stroke-width: 1.5;
+				stroke-linecap: round;
+				stroke-linejoin: round;
+				pointer-events: none;
+			}
+		}
 	}
 
 	.slider {
@@ -803,6 +839,7 @@
 
 		& input[type='range'] {
 			width: 96px;
+			margin: 0;
 			accent-color: var(--color-accent);
 			cursor: pointer;
 		}
