@@ -1,0 +1,133 @@
+# Capture
+
+A desktop app that turns a web page into an MP4 video or a full-page PNG. Paste a
+URL, preview the real page, then render a smooth top-to-bottom scroll at your
+chosen width, duration, and frame rate.
+
+## How it works
+
+Electron is the capture engine. The app loads the target page in an offscreen
+`BrowserWindow`, scrolls it one frame at a time with an ease-in-out curve, and
+pipes each screenshot straight into ffmpeg as H.264.
+
+There is no second browser and no Playwright. Electron already ships Chromium,
+including the proprietary codecs, so `<video>` content on the target page renders
+correctly.
+
+## Running it
+
+```sh
+pnpm install
+pnpm dev
+```
+
+`pnpm dev` starts the Vite server and opens the Electron window against it.
+
+To run the built app:
+
+```sh
+pnpm start
+```
+
+To build a Linux AppImage:
+
+```sh
+pnpm dist
+```
+
+If Electron fails to launch with a missing binary, run its installer directly:
+
+```sh
+node node_modules/electron/install.js
+```
+
+## Using it
+
+1. Paste a URL into the address bar and press **Preview**. The real page loads
+   in a live view.
+2. Pick a viewport width, duration, frame rate, and theme in the bottom bar.
+   Theme sets the page's colour preference (System, Light, Dark) and applies to
+   both the preview and the capture.
+3. Press **Capture MP4**. The button turns red and shows progress; click it again
+   to cancel. For a still instead of a video, press **Save image**.
+4. The result appears inline. Use **Save as** to copy it elsewhere.
+
+Both formats are written to your Videos folder. Images capture the full page,
+capped at 16000px tall.
+
+## Logged-in sites
+
+The preview and the capture engine share one browser session, so a login done in
+the preview carries over to the capture.
+
+1. Paste the URL and press **Preview**.
+2. Log in inside the preview. Popups are allowed, so OAuth flows work.
+3. Press **Capture MP4** or **Save image**.
+
+The session lives in memory only, so it is dropped when you quit and nothing is
+written to disk. Log in again after restarting the app.
+
+## Notes and limits
+
+- Full-page images are capped at 16000px tall, since Chromium cannot render a
+  surface much larger than that.
+- Fixed and sticky headers stay pinned to the viewport while scrolling.
+- Cross-origin iframes cannot be captured.
+- The page is reloaded before capture so entry animations replay, which adds
+  about a second of preparation.
+- `navigator.webdriver` is not set, but some sites may still treat an automated
+  browser differently from a normal one.
+- If `ffmpeg-static` is missing, the app falls back to `ffmpeg` on your `PATH`.
+
+## Installing on Linux
+
+```sh
+pnpm app:install
+```
+
+Builds the AppImage if one is missing, copies it to `~/Applications/Capture.AppImage`,
+and registers a desktop entry and icon so it shows up in your launcher.
+
+To remove it:
+
+```sh
+bash scripts/uninstall.sh
+```
+
+That deletes the AppImage, the desktop entry, the icon, and `~/.config/Capture`.
+It never touches your captures in `~/Videos`.
+
+## Design tokens
+
+Colours come from the Poimandres Yellow KDE scheme
+(`~/.local/share/color-schemes/PoimandresYellow.colors`), cross-checked against
+the Ghostty theme of the same name. Everything lives in `src/lib/theme.css`:
+
+| Token | Value | Use |
+|---|---|---|
+| `--color-bg` | `#0a0a0a` | window background |
+| `--color-surface` | `#141414` | bars, cards |
+| `--color-surface-raised` | `#1e1e1e` | inputs, ghost buttons |
+| `--color-text` | `#f0f0f0` | body text |
+| `--color-text-muted` | `#7a7e94` | secondary text |
+| `--color-accent` | `#ffd54f` | buttons, focus, slider, progress |
+| `--color-on-accent` | `#0a0a0a` | text on accent surfaces |
+| `--color-danger` | `#e06b7b` | errors |
+
+Spacing, radii, type sizes, shadows, and transitions use the same file. The only
+raw colours left in components are the page's own white background and the
+video's black.
+
+## Layout
+
+```
+electron/main.cjs         window, IPC, app:// and capture:// protocols
+electron/preload.cjs      the bridge exposed to the UI as window.api
+electron/capture.cjs      page loading, frame loop, ffmpeg encoding
+src/routes/+page.svelte   the interface
+src/lib/theme.css         design tokens
+src/lib/types.ts          shared types
+scripts/install.sh        build, install, register the desktop entry
+scripts/uninstall.sh      remove the app and its data
+resources/icon.svg        app icon source
+```
