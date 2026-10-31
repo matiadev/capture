@@ -41,7 +41,7 @@ which this project does not define. The app itself runs anywhere Electron does.
 If Electron fails to launch with a missing binary, run its installer directly:
 
 ```sh
-node node_modules/electron/install.js
+./node_modules/electron/install.js
 ```
 
 ## Using it
