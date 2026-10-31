@@ -1,10 +1,9 @@
-import { BrowserWindow, app } from 'electron';
 import { spawn, type ChildProcess } from 'node:child_process';
-import type { Writable } from 'node:stream';
-import { createRequire } from 'node:module';
 import fs from 'node:fs';
+import { createRequire } from 'node:module';
 import path from 'node:path';
-
+import type { Writable } from 'node:stream';
+import { BrowserWindow, app } from 'electron';
 import type { CaptureOptions, CaptureResult, ImageResult, PageInfo } from '../src/lib/types.ts';
 
 const requireModule = createRequire(import.meta.url);

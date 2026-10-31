@@ -1,5 +1,5 @@
-import { app, nativeImage } from 'electron';
 import path from 'node:path';
+import { app, nativeImage } from 'electron';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';

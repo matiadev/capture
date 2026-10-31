@@ -1,3 +1,6 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import {
 	app,
 	BrowserWindow,
@@ -9,11 +12,8 @@ import {
 	shell,
 	nativeTheme
 } from 'electron';
-import path from 'node:path';
-import fs from 'node:fs';
-import { pathToFileURL } from 'node:url';
-import { capturesDir } from './capture.ts';
 import { renderVideo, renderImage } from './api.ts';
+import { capturesDir } from './capture.ts';
 
 const isDev = !app.isPackaged && process.env.CAPTURE_PROD !== '1';
 const DEV_URL = process.env.CAPTURE_DEV_URL || 'http://127.0.0.1:5173';
