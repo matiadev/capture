@@ -1,7 +1,5 @@
 /*
- * Design tokens, taken from the Poimandres Yellow KDE colour scheme.
- * Source: ~/.local/share/color-schemes/PoimandresYellow.colors
- * Cross-checked against the Ghostty "Poimandres Yellow" theme.
+ * Design tokens for the app: colours, spacing, radii, type, elevation, motion.
  */
 
 :root {

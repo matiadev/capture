@@ -113,7 +113,7 @@ Add it to an MCP client with that command. For opencode:
   "servers": {
     "capture": {
       "type": "local",
-      "command": ["/home/matia/Applications/Capture.AppImage", "--mcp"]
+      "command": ["~/Applications/Capture.AppImage", "--mcp"]
     }
   }
 }
@@ -132,9 +132,7 @@ It still needs a display server, so on a headless machine run it under `xvfb-run
 
 ## Design tokens
 
-Colours come from the Poimandres Yellow KDE scheme
-(`~/.local/share/color-schemes/PoimandresYellow.colors`), cross-checked against
-the Ghostty theme of the same name. Everything lives in `src/lib/theme.css`:
+All colours, spacing, radii, and type sizes live in `src/lib/theme.css`:
 
 | Token | Value | Use |
 |---|---|---|
