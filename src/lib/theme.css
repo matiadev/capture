@@ -1,25 +1,19 @@
-/* design tokens */
-
 :root {
-	/* surfaces */
 	--color-bg: #0a0a0a;
 	--color-surface: #141414;
 	--color-surface-raised: #1e1e1e;
 	--color-border: #222222;
 	--color-border-strong: #2e2e2e;
 
-	/* text */
 	--color-text: #f0f0f0;
 	--color-text-muted: #7a7e94;
 	--color-text-dim: #5c6070;
 
-	/* accent */
 	--color-accent: #ffd54f;
 	--color-accent-hover: #f5c73c;
 	--color-on-accent: #0a0a0a;
 	--color-selection: #383017;
 
-	/* status */
 	--color-danger: #e06b7b;
 	--color-danger-hover: #d25f6e;
 	--color-danger-surface: #241315;

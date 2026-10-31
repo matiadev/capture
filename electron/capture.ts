@@ -65,18 +65,15 @@ function slugify(input: string): string {
 
 // site name only, github-175134.mp4
 function fileBase(href: string, title: string): string {
-	try {
-		const host = new URL(href).hostname.replace(/^www\./, '');
-		if (host) {
-			// keep IP addresses whole, otherwise drop the domain
-			const isIp = /^\d+(\.\d+){3}$/.test(host);
-			const site = isIp ? host : host.split('.')[0];
-			return site.replace(/[^a-zA-Z0-9.-]/g, '');
-		}
-	} catch {
-		// not a URL, fall back to the title
-	}
-	return slugify(title);
+	if (!URL.canParse(href)) return slugify(title);
+
+	const host = new URL(href).hostname.replace(/^www\./, '');
+	if (!host) return slugify(title);
+
+	// keep IP addresses whole, otherwise drop the domain
+	const isIp = /^\d+(\.\d+){3}$/.test(host);
+	const site = isIp ? host : host.split('.')[0];
+	return site.replace(/[^a-zA-Z0-9.-]/g, '');
 }
 
 function timestamp(): string {

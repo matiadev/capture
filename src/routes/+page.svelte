@@ -113,25 +113,16 @@
 	}
 
 	function goBack() {
-		try {
-			webview?.goBack();
-		} catch {
-			/* nothing to go back to */
-		}
+		if (canGoBack) webview?.goBack();
 	}
 
 	function goForward() {
-		try {
-			webview?.goForward();
-		} catch {
-			/* nothing to go forward to */
-		}
+		if (canGoForward) webview?.goForward();
 	}
 
 	async function runCapture() {
 		if (!window.api) return;
 
-		// while capturing the same button cancels
 		if (captureState === 'capturing') {
 			await window.api.cancel();
 			return;
@@ -159,7 +150,6 @@
 			});
 
 			if ('cancelled' in outcome) {
-				// cancelled by the user, keep the preview as it was
 				captureState = 'idle';
 			} else {
 				result = outcome;
@@ -470,8 +460,6 @@
 		background: var(--color-bg);
 	}
 
-	/* top bar */
-
 	.bar {
 		display: flex;
 		align-items: center;
@@ -485,32 +473,36 @@
 	.nav {
 		display: flex;
 		gap: 2px;
-	}
-	.nav button {
-		width: 28px;
-		height: 28px;
-		display: grid;
-		place-items: center;
-		background: transparent;
-		border: none;
-		border-radius: var(--radius-sm);
-		color: var(--color-text-dim);
-		transition:
-			background var(--transition),
-			color var(--transition);
-	}
-	.nav svg {
-		width: 15px;
-		height: 15px;
-		display: block;
-	}
-	.nav button:hover:not(:disabled) {
-		background: var(--color-surface-raised);
-		color: var(--color-text);
-	}
-	.nav button:disabled {
-		cursor: default;
-		opacity: 0.5;
+
+		& button {
+			width: 28px;
+			height: 28px;
+			display: grid;
+			place-items: center;
+			background: transparent;
+			border: none;
+			border-radius: var(--radius-sm);
+			color: var(--color-text-dim);
+			transition:
+				background var(--transition),
+				color var(--transition);
+
+			&:hover:not(:disabled) {
+				background: var(--color-surface-raised);
+				color: var(--color-text);
+			}
+
+			&:disabled {
+				cursor: default;
+				opacity: 0.5;
+			}
+		}
+
+		& svg {
+			width: 15px;
+			height: 15px;
+			display: block;
+		}
 	}
 
 	.urlbar {
@@ -525,27 +517,31 @@
 		min-width: 0;
 		height: 34px;
 		transition: border-color var(--transition);
+
+		&:focus-within {
+			border-color: var(--color-accent);
+		}
+
+		& input {
+			flex: 1 1 auto;
+			background: transparent;
+			border: none;
+			outline: none;
+			color: var(--color-text);
+			font-size: var(--text-base);
+			min-width: 0;
+
+			&::placeholder {
+				color: var(--color-text-dim);
+			}
+		}
 	}
-	.urlbar:focus-within {
-		border-color: var(--color-accent);
-	}
+
 	.lock {
 		color: var(--color-text-dim);
 		display: inline-flex;
 		align-items: center;
 		flex: 0 0 auto;
-	}
-	.urlbar input {
-		flex: 1 1 auto;
-		background: transparent;
-		border: none;
-		outline: none;
-		color: var(--color-text);
-		font-size: var(--text-base);
-		min-width: 0;
-	}
-	.urlbar input::placeholder {
-		color: var(--color-text-dim);
 	}
 
 	.pill {
@@ -559,16 +555,16 @@
 		font-weight: var(--weight-semibold);
 		white-space: nowrap;
 		transition: background var(--transition);
-	}
-	.pill:hover:not(:disabled) {
-		background: var(--color-accent-hover);
-	}
-	.pill:disabled {
-		opacity: 0.4;
-		cursor: default;
-	}
 
-	/* stage */
+		&:hover:not(:disabled) {
+			background: var(--color-accent-hover);
+		}
+
+		&:disabled {
+			opacity: 0.4;
+			cursor: default;
+		}
+	}
 
 	.stage {
 		position: relative;
@@ -576,13 +572,14 @@
 		overflow-y: auto;
 		overflow-x: hidden;
 		background: var(--color-bg);
-	}
 
-	.stage.hide-scrollbar {
-		scrollbar-width: none;
-	}
-	.stage.hide-scrollbar::-webkit-scrollbar {
-		display: none;
+		&.hide-scrollbar {
+			scrollbar-width: none;
+
+			&::-webkit-scrollbar {
+				display: none;
+			}
+		}
 	}
 
 	.live {
@@ -606,8 +603,6 @@
 		font-size: 13.5px;
 	}
 
-	/* loading */
-
 	.loading-bar {
 		position: absolute;
 		top: 0;
@@ -617,14 +612,16 @@
 		overflow: hidden;
 		background: color-mix(in srgb, var(--color-accent) 18%, transparent);
 		z-index: 12;
+
+		& i {
+			display: block;
+			width: 30%;
+			height: 100%;
+			background: var(--color-accent);
+			animation: sweep 1.1s ease-in-out infinite;
+		}
 	}
-	.loading-bar i {
-		display: block;
-		width: 30%;
-		height: 100%;
-		background: var(--color-accent);
-		animation: sweep 1.1s ease-in-out infinite;
-	}
+
 	@keyframes sweep {
 		from {
 			transform: translateX(-100%);
@@ -633,8 +630,6 @@
 			transform: translateX(400%);
 		}
 	}
-
-	/* result */
 
 	.result {
 		min-height: 100%;
@@ -654,21 +649,24 @@
 		background: #000;
 		border: 1px solid var(--color-border-strong);
 		box-shadow: var(--shadow-player);
-	}
-	.player video {
-		display: block;
-		width: 100%;
-	}
-	.player.is-image {
-		background: var(--color-surface);
-	}
-	.player img {
-		display: block;
-		margin: 0 auto;
-		max-width: 100%;
-		max-height: 62vh;
-		width: auto;
-		height: auto;
+
+		&.is-image {
+			background: var(--color-surface);
+		}
+
+		& video {
+			display: block;
+			width: 100%;
+		}
+
+		& img {
+			display: block;
+			margin: 0 auto;
+			max-width: 100%;
+			max-height: 62vh;
+			width: auto;
+			height: auto;
+		}
 	}
 
 	.result-actions {
@@ -691,26 +689,28 @@
 		font-weight: var(--weight-semibold);
 		white-space: nowrap;
 		transition: background var(--transition);
-	}
-	.btn svg {
-		width: 14px;
-		height: 14px;
-		flex: 0 0 auto;
-	}
-	.btn:hover {
-		background: var(--color-accent-hover);
-	}
-	.btn.ghost {
-		background: var(--color-surface-raised);
-		color: var(--color-text-muted);
-		border: 1px solid var(--color-border-strong);
-	}
-	.btn.ghost:hover {
-		background: var(--color-surface);
-		color: var(--color-text);
-	}
 
-	/* toast */
+		& svg {
+			width: 14px;
+			height: 14px;
+			flex: 0 0 auto;
+		}
+
+		&:hover {
+			background: var(--color-accent-hover);
+		}
+
+		&.ghost {
+			background: var(--color-surface-raised);
+			color: var(--color-text-muted);
+			border: 1px solid var(--color-border-strong);
+
+			&:hover {
+				background: var(--color-surface);
+				color: var(--color-text);
+			}
+		}
+	}
 
 	.toast {
 		position: absolute;
@@ -728,20 +728,20 @@
 		font-size: var(--text-sm);
 		max-width: 70%;
 		z-index: 25;
-	}
-	.toast button {
-		background: transparent;
-		border: none;
-		color: var(--color-danger);
-		font-size: var(--text-base);
-		line-height: 1;
-		opacity: 0.7;
-	}
-	.toast button:hover {
-		opacity: 1;
-	}
 
-	/* capture bar */
+		& button {
+			background: transparent;
+			border: none;
+			color: var(--color-danger);
+			font-size: var(--text-base);
+			line-height: 1;
+			opacity: 0.7;
+
+			&:hover {
+				opacity: 1;
+			}
+		}
+	}
 
 	.capture-bar {
 		position: absolute;
@@ -764,48 +764,54 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-1);
-	}
-	.ctl > span {
-		font-size: var(--text-label);
-		text-transform: uppercase;
-		letter-spacing: 0.07em;
-		color: var(--color-text-dim);
-		font-weight: var(--weight-semibold);
-		white-space: nowrap;
-	}
-	.ctl select {
-		background: transparent;
-		border: none;
-		color: var(--color-text);
-		font-size: var(--text-base);
-		font-weight: var(--weight-medium);
-		outline: none;
-		padding: 0;
-		cursor: pointer;
-	}
-	.ctl select:disabled {
-		cursor: default;
-		opacity: 0.6;
-	}
-	.ctl select option {
-		background: var(--color-surface);
-		color: var(--color-text);
+
+		& > span {
+			font-size: var(--text-label);
+			text-transform: uppercase;
+			letter-spacing: 0.07em;
+			color: var(--color-text-dim);
+			font-weight: var(--weight-semibold);
+			white-space: nowrap;
+		}
+
+		& select {
+			background: transparent;
+			border: none;
+			color: var(--color-text);
+			font-size: var(--text-base);
+			font-weight: var(--weight-medium);
+			outline: none;
+			padding: 0;
+			cursor: pointer;
+
+			&:disabled {
+				cursor: default;
+				opacity: 0.6;
+			}
+
+			& option {
+				background: var(--color-surface);
+				color: var(--color-text);
+			}
+		}
 	}
 
 	.slider {
 		display: flex;
 		align-items: center;
 		gap: 9px;
-	}
-	.slider input[type='range'] {
-		width: 96px;
-		accent-color: var(--color-accent);
-		cursor: pointer;
-	}
-	.slider b {
-		font-size: var(--text-base);
-		font-weight: var(--weight-medium);
-		min-width: 30px;
+
+		& input[type='range'] {
+			width: 96px;
+			accent-color: var(--color-accent);
+			cursor: pointer;
+		}
+
+		& b {
+			font-size: var(--text-base);
+			font-weight: var(--weight-medium);
+			min-width: 30px;
+		}
 	}
 
 	.divider {
@@ -824,25 +830,28 @@
 		position: relative;
 		margin-top: 2px;
 		transition: background var(--transition);
-	}
-	.switch.on {
-		background: var(--color-accent);
-	}
-	.switch i {
-		position: absolute;
-		top: 2px;
-		left: 2px;
-		width: 13px;
-		height: 13px;
-		border-radius: var(--radius-full);
-		background: var(--color-text);
-		transition:
-			transform var(--transition),
-			background var(--transition);
-	}
-	.switch.on i {
-		transform: translateX(13px);
-		background: var(--color-on-accent);
+
+		& i {
+			position: absolute;
+			top: 2px;
+			left: 2px;
+			width: 13px;
+			height: 13px;
+			border-radius: var(--radius-full);
+			background: var(--color-text);
+			transition:
+				transform var(--transition),
+				background var(--transition);
+		}
+
+		&.on {
+			background: var(--color-accent);
+
+			& i {
+				transform: translateX(13px);
+				background: var(--color-on-accent);
+			}
+		}
 	}
 
 	.btn-image {
@@ -864,26 +873,31 @@
 			background var(--transition),
 			color var(--transition),
 			border-color var(--transition);
-	}
-	.btn-image svg {
-		width: 14px;
-		height: 14px;
-		flex: 0 0 auto;
-	}
-	.btn-image:hover:not(:disabled) {
-		background: var(--color-surface-raised);
-		border-color: var(--color-text-dim);
-	}
-	.btn-image.is-working {
-		color: var(--color-text);
-	}
-	.btn-image.is-success {
-		color: var(--color-success);
-		border-color: color-mix(in srgb, var(--color-success) 55%, transparent);
-	}
-	.btn-image:disabled {
-		opacity: 0.4;
-		cursor: default;
+
+		& svg {
+			width: 14px;
+			height: 14px;
+			flex: 0 0 auto;
+		}
+
+		&:hover:not(:disabled) {
+			background: var(--color-surface-raised);
+			border-color: var(--color-text-dim);
+		}
+
+		&.is-working {
+			color: var(--color-text);
+		}
+
+		&.is-success {
+			color: var(--color-success);
+			border-color: color-mix(in srgb, var(--color-success) 55%, transparent);
+		}
+
+		&:disabled {
+			opacity: 0.4;
+			cursor: default;
+		}
 	}
 
 	.actions {
@@ -911,40 +925,46 @@
 		transition:
 			background var(--transition),
 			width 0.3s var(--ease);
-	}
-	.btn-capture svg {
-		width: 13px;
-		height: 13px;
-		flex: 0 0 auto;
-	}
-	.btn-capture:hover:not(:disabled) {
-		background: var(--color-accent-hover);
-	}
 
-	.btn-capture.is-capturing {
-		width: 88px;
-		background: var(--color-danger);
-	}
-	.btn-capture.is-capturing:hover:not(:disabled) {
-		background: var(--color-danger-hover);
-	}
-	.btn-capture.is-success {
-		width: 112px;
-		background: var(--color-success);
-	}
-	.btn-capture.is-success:hover:not(:disabled) {
-		background: var(--color-success-hover);
-	}
+		& svg {
+			width: 13px;
+			height: 13px;
+			flex: 0 0 auto;
+		}
 
-	.btn-capture:disabled {
-		opacity: 0.4;
-		cursor: default;
-	}
-	.btn-capture .dot {
-		width: 7px;
-		height: 7px;
-		border-radius: var(--radius-full);
-		background: var(--color-on-accent);
-		box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-on-accent) 22%, transparent);
+		&:hover:not(:disabled) {
+			background: var(--color-accent-hover);
+		}
+
+		&:disabled {
+			opacity: 0.4;
+			cursor: default;
+		}
+
+		&.is-capturing {
+			width: 88px;
+			background: var(--color-danger);
+
+			&:hover:not(:disabled) {
+				background: var(--color-danger-hover);
+			}
+		}
+
+		&.is-success {
+			width: 112px;
+			background: var(--color-success);
+
+			&:hover:not(:disabled) {
+				background: var(--color-success-hover);
+			}
+		}
+
+		& .dot {
+			width: 7px;
+			height: 7px;
+			border-radius: var(--radius-full);
+			background: var(--color-on-accent);
+			box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-on-accent) 22%, transparent);
+		}
 	}
 </style>
