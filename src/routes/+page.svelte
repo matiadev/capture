@@ -464,7 +464,7 @@
 		display: flex;
 		align-items: center;
 		gap: var(--space-3);
-		padding: 11px var(--space-4);
+		padding: 12px var(--space-4);
 		background: var(--color-surface);
 		border-bottom: 1px solid var(--color-border);
 		flex: 0 0 auto;
@@ -499,8 +499,8 @@
 		}
 
 		& svg {
-			width: 15px;
-			height: 15px;
+			width: 16px;
+			height: 16px;
 			display: block;
 		}
 	}
@@ -509,7 +509,7 @@
 		flex: 1 1 auto;
 		display: flex;
 		align-items: center;
-		gap: 9px;
+		gap: 10px;
 		background: var(--color-surface-raised);
 		border: 1px solid var(--color-border-strong);
 		border-radius: var(--radius-md);
@@ -549,7 +549,7 @@
 		color: var(--color-on-accent);
 		border: none;
 		border-radius: var(--radius-sm);
-		padding: 0 15px;
+		padding: 0 16px;
 		height: 34px;
 		font-size: var(--text-sm);
 		font-weight: var(--weight-semibold);
@@ -600,7 +600,7 @@
 		justify-content: center;
 		gap: var(--space-3);
 		color: var(--color-text-dim);
-		font-size: 13.5px;
+		font-size: 14px;
 	}
 
 	.loading-bar {
@@ -755,7 +755,7 @@
 		backdrop-filter: blur(18px);
 		border: 1px solid var(--color-border-strong);
 		border-radius: var(--radius-lg);
-		padding: 11px 13px 11px 18px;
+		padding: 12px 14px 12px 18px;
 		box-shadow: var(--shadow-float);
 		z-index: 20;
 	}
@@ -768,7 +768,7 @@
 		& > span {
 			font-size: var(--text-label);
 			text-transform: uppercase;
-			letter-spacing: 0.07em;
+			letter-spacing: 0.1em;
 			color: var(--color-text-dim);
 			font-weight: var(--weight-semibold);
 			white-space: nowrap;
@@ -799,7 +799,7 @@
 	.slider {
 		display: flex;
 		align-items: center;
-		gap: 9px;
+		gap: 10px;
 
 		& input[type='range'] {
 			width: 96px;
@@ -822,7 +822,7 @@
 
 	.switch {
 		width: 30px;
-		height: 17px;
+		height: 16px;
 		border-radius: var(--radius-full);
 		background: var(--color-border-strong);
 		border: none;
@@ -835,8 +835,8 @@
 			position: absolute;
 			top: 2px;
 			left: 2px;
-			width: 13px;
-			height: 13px;
+			width: 12px;
+			height: 12px;
 			border-radius: var(--radius-full);
 			background: var(--color-text);
 			transition:
@@ -848,7 +848,7 @@
 			background: var(--color-accent);
 
 			& i {
-				transform: translateX(13px);
+				transform: translateX(14px);
 				background: var(--color-on-accent);
 			}
 		}
@@ -915,7 +915,7 @@
 		color: var(--color-on-accent);
 		border: none;
 		border-radius: var(--radius-md);
-		padding: 11px 0;
+		padding: 12px 0;
 		width: 152px;
 		font-size: var(--text-base);
 		font-weight: var(--weight-semibold);
@@ -927,8 +927,8 @@
 			width 0.3s var(--ease);
 
 		& svg {
-			width: 13px;
-			height: 13px;
+			width: 14px;
+			height: 14px;
 			flex: 0 0 auto;
 		}
 
@@ -960,11 +960,11 @@
 		}
 
 		& .dot {
-			width: 7px;
-			height: 7px;
+			width: 8px;
+			height: 8px;
 			border-radius: var(--radius-full);
 			background: var(--color-on-accent);
-			box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-on-accent) 22%, transparent);
+			box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-on-accent) 22%, transparent);
 		}
 	}
 </style>
