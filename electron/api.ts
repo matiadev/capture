@@ -2,9 +2,9 @@
 // all go through here so theme handling and result shape stay in one place.
 import { nativeTheme } from 'electron';
 import { capture, captureImage } from './capture.ts';
-import type { CaptureOptions, CaptureResult, ImageResult, PageResult } from '../src/lib/types.ts';
+import type { CaptureOptions, CaptureResult, ImageResult } from '../src/lib/types.ts';
 
-export type { CaptureOptions, CaptureResult, ImageResult, PageResult };
+export type { CaptureOptions, CaptureResult, ImageResult };
 
 export type ThemeMode = 'system' | 'light' | 'dark';
 

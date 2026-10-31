@@ -4,7 +4,7 @@ import { createRequire } from 'node:module';
 import path from 'node:path';
 import type { Writable } from 'node:stream';
 import { BrowserWindow, app } from 'electron';
-import type { CaptureOptions, CaptureResult, ImageResult, PageInfo } from '../src/lib/types.ts';
+import type { CaptureOptions, CaptureResult, ImageResult } from '../src/lib/types.ts';
 
 const requireModule = createRequire(import.meta.url);
 

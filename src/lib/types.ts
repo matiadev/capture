@@ -1,10 +1,3 @@
-export interface PageInfo {
-	title: string;
-	href: string;
-	height: number;
-	viewportHeight: number;
-}
-
 export interface CaptureOptions {
 	url: string;
 	width?: number;
