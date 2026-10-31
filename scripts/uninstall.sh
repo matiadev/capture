@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Removes everything install.sh created, plus app data and saved captures.
+# Removes the app installed by install.sh, plus its app data.
+# Saved captures are never touched.
 set -euo pipefail
 
 APP_NAME="Capture"
@@ -8,22 +9,63 @@ DESKTOP="${HOME}/.local/share/applications/capture.desktop"
 ICON="${HOME}/.local/share/icons/hicolor/512x512/apps/capture.png"
 DATA="${HOME}/.config/Capture"
 
-for target in "${APPIMAGE}" "${DESKTOP}" "${ICON}"; do
-	if [[ -e "${target}" ]]; then
-		rm -f "${target}"
-		echo "removed ${target}"
-	fi
+usage() {
+	cat <<EOF
+Usage: $(basename "$0") [--dry-run]
+
+Removes the ${APP_NAME} AppImage, its desktop entry and icon, and ${DATA}.
+Saved captures are never touched.
+
+Options:
+  -n, --dry-run   Print what would be removed without deleting anything
+  -h, --help      Show this message
+EOF
+}
+
+dry_run=0
+
+while [[ $# -gt 0 ]]; do
+	case "$1" in
+		-n | --dry-run) dry_run=1 ;;
+		-h | --help)
+			usage
+			exit 0
+			;;
+		*)
+			echo "Unknown option: $1" >&2
+			usage >&2
+			exit 2
+			;;
+	esac
+	shift
 done
 
-if [[ -d "${DATA}" ]]; then
-	rm -rf "${DATA}"
-	echo "removed ${DATA}"
-fi
+remove() {
+	local target="$1"
 
-echo "Captures in ${HOME}/Videos were left alone."
+	if [[ ! -e "${target}" ]]; then
+		return
+	fi
 
-if command -v update-desktop-database > /dev/null 2>&1; then
+	if [[ ${dry_run} -eq 1 ]]; then
+		echo "would remove ${target}"
+	else
+		rm -rf "${target}"
+		echo "removed ${target}"
+	fi
+}
+
+remove "${APPIMAGE}"
+remove "${DESKTOP}"
+remove "${ICON}"
+remove "${DATA}"
+
+echo "Saved captures were left alone."
+
+if [[ ${dry_run} -eq 0 ]] && command -v update-desktop-database > /dev/null 2>&1; then
 	update-desktop-database "$(dirname "${DESKTOP}")" > /dev/null 2>&1 || true
 fi
 
-echo "Done."
+if [[ ${dry_run} -eq 1 ]]; then
+	echo "Dry run: nothing was deleted."
+fi

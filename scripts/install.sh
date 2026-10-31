@@ -12,6 +12,33 @@ DESKTOP="${DESKTOP_DIR}/capture.desktop"
 ICON_DIR="${HOME}/.local/share/icons/hicolor/512x512/apps"
 ICON="${ICON_DIR}/capture.png"
 
+usage() {
+	cat <<EOF
+Usage: $(basename "$0")
+
+Builds the AppImage if dist/ is empty, installs it to ${APPIMAGE},
+and registers a desktop entry and icon.
+
+Options:
+  -h, --help   Show this message
+EOF
+}
+
+while [[ $# -gt 0 ]]; do
+	case "$1" in
+		-h | --help)
+			usage
+			exit 0
+			;;
+		*)
+			echo "Unknown option: $1" >&2
+			usage >&2
+			exit 2
+			;;
+	esac
+	shift
+done
+
 if ! compgen -G "${ROOT}/dist/*.AppImage" > /dev/null; then
 	echo "No AppImage in dist/. Building one first..."
 	(cd "${ROOT}" && pnpm dist)

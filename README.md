@@ -98,8 +98,10 @@ To remove it:
 ./scripts/uninstall.sh
 ```
 
-The scripts have a shebang and are executable, so the `bash` prefix is
-unnecessary. `pnpm app:install` and `pnpm app:uninstall` run the same files.
+Unknown flags abort, and `--dry-run` prints what would be removed without
+touching anything. The scripts have a shebang and are executable, so the `bash`
+prefix is unnecessary. `pnpm app:install` and `pnpm app:uninstall` run the same
+files.
 
 That deletes the AppImage, the desktop entry, the icon, and `~/.config/Capture`.
 It never touches your captures in the video folder.
