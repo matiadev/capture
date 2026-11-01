@@ -47,7 +47,7 @@ function createWindow(): void {
 	const win = new BrowserWindow({
 		width: 1440,
 		height: 900,
-		minWidth: 960,
+		minWidth: 1040,
 		minHeight: 640,
 		backgroundColor: '#0a0a0a',
 		show: false,

@@ -50,14 +50,15 @@ app.whenReady().then(async () => {
 				width: z.number().int().min(320).max(3840).optional().describe('Viewport width in pixels. Default 1440.'),
 				duration: z.number().min(1).max(60).optional().describe('Video length in seconds. Default 10.'),
 				fps: z.number().int().min(10).max(60).optional().describe('Frame rate. Default 60.'),
+				zoom: z.number().min(0.5).max(2).optional().describe('Page zoom. Default 1.'),
 				theme: z
 					.enum(['system', 'light', 'dark'])
 					.optional()
 					.describe('Colour scheme to render the page in. Default system.')
 			}
 		},
-		async ({ url, width, duration, fps, theme }) => {
-			const result = await renderVideo({ url, width, duration, fps, theme });
+		async ({ url, width, duration, fps, theme, zoom }) => {
+			const result = await renderVideo({ url, width, duration, fps, theme, zoom });
 
 			return {
 				content: [
@@ -79,14 +80,15 @@ app.whenReady().then(async () => {
 			inputSchema: {
 				url: z.string().describe('Page address, for example https://example.com'),
 				width: z.number().int().min(320).max(3840).optional().describe('Viewport width in pixels. Default 1440.'),
+				zoom: z.number().min(0.5).max(2).optional().describe('Page zoom. Default 1.'),
 				theme: z
 					.enum(['system', 'light', 'dark'])
 					.optional()
 					.describe('Colour scheme to render the page in. Default system.')
 			}
 		},
-		async ({ url, width, theme }) => {
-			const result = await renderImage({ url, width, theme });
+		async ({ url, width, theme, zoom }) => {
+			const result = await renderImage({ url, width, theme, zoom });
 
 			return {
 				content: [

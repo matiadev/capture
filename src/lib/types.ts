@@ -4,6 +4,7 @@ export interface CaptureOptions {
 	height?: number;
 	duration?: number;
 	fps?: number;
+	zoom?: number;
 }
 
 export interface CaptureProgress {

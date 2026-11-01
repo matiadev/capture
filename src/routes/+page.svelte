@@ -4,6 +4,7 @@
 
 	let url = $state('');
 	let viewportWidth = $state(1440);
+	let zoom = $state(1);
 	let duration = $state(10);
 	let fps = $state(60);
 	let hideScrollbar = $state(false);
@@ -92,10 +93,18 @@
 			loading = false;
 			loadError = event.errorDescription || 'The page could not be loaded.';
 		};
+		const onReady = () => {
+			try {
+				view.setZoomFactor(zoom);
+			} catch {
+				// the guest is not attached yet
+			}
+		};
 
 		view.addEventListener('loadstart', onStart);
 		view.addEventListener('did-finish-load', onFinish);
 		view.addEventListener('did-fail-load', onFail);
+		view.addEventListener('dom-ready', onReady);
 		view.addEventListener('did-navigate', syncHistory);
 		view.addEventListener('did-navigate-in-page', syncHistory);
 
@@ -103,6 +112,7 @@
 			view.removeEventListener('loadstart', onStart);
 			view.removeEventListener('did-finish-load', onFinish);
 			view.removeEventListener('did-fail-load', onFail);
+			view.removeEventListener('dom-ready', onReady);
 			view.removeEventListener('did-navigate', syncHistory);
 			view.removeEventListener('did-navigate-in-page', syncHistory);
 			if (webview === view) webview = null;
@@ -115,6 +125,16 @@
 
 	function goForward() {
 		if (canGoForward) webview?.goForward();
+	}
+
+	function setZoom(value: number) {
+		zoom = value;
+
+		try {
+			webview?.setZoomFactor(value);
+		} catch {
+			// no guest until the next preview
+		}
 	}
 
 	async function runCapture() {
@@ -143,7 +163,8 @@
 				width: viewportWidth,
 				height: 900,
 				duration,
-				fps
+				fps,
+				zoom
 			});
 
 			if ('cancelled' in outcome) {
@@ -178,7 +199,8 @@
 			const saved = await window.api.saveImage({
 				url: target,
 				width: viewportWidth,
-				height: 900
+				height: 900,
+				zoom
 			});
 
 			result = saved;
@@ -341,6 +363,29 @@
 					<option value={1280}>1280 px</option>
 					<option value={1440}>1440 px</option>
 					<option value={1920}>1920 px</option>
+				</select>
+				<svg class="chevron" viewBox="0 0 12 12" aria-hidden="true">
+					<path d="M2 4l4 4 4-4" />
+				</svg>
+			</span>
+		</label>
+
+		<div class="divider"></div>
+
+		<label class="ctl">
+			<span>Zoom</span>
+			<span class="field">
+				<select
+					value={zoom}
+					disabled={capturing}
+					onchange={(event) => setZoom(Number(event.currentTarget.value))}
+				>
+					<option value={0.5}>50%</option>
+					<option value={0.75}>75%</option>
+					<option value={1}>100%</option>
+					<option value={1.25}>125%</option>
+					<option value={1.5}>150%</option>
+					<option value={2}>200%</option>
 				</select>
 				<svg class="chevron" viewBox="0 0 12 12" aria-hidden="true">
 					<path d="M2 4l4 4 4-4" />

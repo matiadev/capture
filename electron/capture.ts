@@ -42,6 +42,12 @@ const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout
 const easeInOutCubic = (t: number): number =>
 	t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
+const ZOOM_MIN = 0.5;
+const ZOOM_MAX = 2;
+
+const clampZoom = (zoom?: number): number =>
+	Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, zoom ?? 1));
+
 function capturesDir(): string {
 	const dir = app.getPath('videos');
 	fs.mkdirSync(dir, { recursive: true });
@@ -247,12 +253,14 @@ function cancelledError(): Error {
 type ProgressCallback = (progress: { progress: number }) => void;
 
 async function capture(
-	{ url, width = 1440, height = 900, duration = 10, fps = 60 }: CaptureOptions,
+	{ url, width = 1440, height = 900, duration = 10, fps = 60, zoom }: CaptureOptions,
 	onProgress: ProgressCallback = () => {},
 	signal?: AbortSignal
 ): Promise<Omit<CaptureResult, 'url'>> {
 	const win = await openPage({ url, width, height });
 	const frames = Math.max(2, Math.round(duration * fps));
+
+	win.webContents.setZoomFactor(clampZoom(zoom));
 
 	let outPath: string | null = null;
 	let ffmpeg: ChildProcess | null = null;
@@ -387,15 +395,19 @@ const MAX_IMAGE_HEIGHT = 16000;
 async function captureImage({
 	url,
 	width = 1440,
-	height = 900
+	height = 900,
+	zoom
 }: CaptureOptions): Promise<Omit<ImageResult, 'url'>> {
 	const win = await openPage({ url, width, height });
+	const factor = clampZoom(zoom);
+
+	win.webContents.setZoomFactor(factor);
 
 	try {
 		const info = await win.webContents.executeJavaScript(PREPARE, true);
 		await win.webContents.executeJavaScript(CLEAN_CSS, true);
 
-		const fullHeight = Math.min(info.height, MAX_IMAGE_HEIGHT);
+		const fullHeight = Math.min(Math.round(info.height * factor), MAX_IMAGE_HEIGHT);
 
 		win.setContentSize(width, fullHeight);
 		await sleep(600);
@@ -424,7 +436,7 @@ async function captureImage({
 			pageHeight: info.height,
 			width: size.width,
 			height: size.height,
-			truncated: info.height > MAX_IMAGE_HEIGHT,
+			truncated: Math.round(info.height * factor) > MAX_IMAGE_HEIGHT,
 			bytes: fs.statSync(outPath).size
 		};
 	} finally {

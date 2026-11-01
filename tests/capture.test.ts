@@ -111,6 +111,32 @@ test('saves the whole page as a png', { timeout: 120_000, skip: SKIP }, async ()
 	assert.equal(result.bytes, bytes.length);
 });
 
+test('captures at the requested zoom', { timeout: 120_000, skip: SKIP }, async () => {
+	const image = await app.evaluate<ImageResult>(`window.api.saveImage(${JSON.stringify({
+		url: server.url,
+		width: 800,
+		height: 600,
+		zoom: 1.5
+	})})`);
+
+	assert.equal(image.width, 800);
+	assert.equal(image.height, Math.round(image.pageHeight * 1.5));
+	assert.ok(image.path.startsWith(app.home));
+
+	const video = await app.evaluate<CaptureResult>(`window.api.run(${JSON.stringify({
+		url: server.url,
+		width: 640,
+		height: 480,
+		duration: 1,
+		fps: 10,
+		zoom: 2
+	})})`);
+
+	assert.equal(video.width, 640);
+	assert.equal(video.height, 480);
+	assert.equal(video.duration, 1);
+});
+
 test('cancels a run without leaving a file', { timeout: 120_000, skip: SKIP }, async () => {
 	const before = listVideos();
 
