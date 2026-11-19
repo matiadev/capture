@@ -70,7 +70,6 @@ async function waitForSocket(port: number, log: () => string): Promise<string> {
 			const page = targets.find((target) => target.type === 'page' && target.url.startsWith('app://'));
 			if (page) return page.webSocketDebuggerUrl;
 		} catch {
-			// the port is not up yet
 		}
 		await sleep(250);
 	}
@@ -191,7 +190,6 @@ function stopGroup(child: ChildProcess): void {
 	try {
 		process.kill(-child.pid, 'SIGTERM');
 	} catch {
-		// already gone
 	}
 }
 

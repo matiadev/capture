@@ -10,7 +10,6 @@
 	let hideScrollbar = $state(false);
 	let theme = $state<ThemeMode>('system');
 
-	// bumping the id remounts the webview, which reloads the page
 	let request = $state<{ id: number; url: string } | null>(null);
 	let requestId = 0;
 
@@ -24,7 +23,6 @@
 	let imageState = $state<'idle' | 'working' | 'success'>('idle');
 	let progress = $state(0);
 	let error = $state<string | null>(null);
-	// the page also opens in a plain browser during development, where the preload bridge is absent
 	const ready = browser && !!window.api;
 
 	const percent = $derived(Math.round(progress * 100));
@@ -88,7 +86,6 @@
 			syncHistory();
 		};
 		const onFail = (event: any) => {
-			// -3 is ERR_ABORTED, fired when navigating away mid-load
 			if (event.errorCode === -3) return;
 			loading = false;
 			loadError = event.errorDescription || 'The page could not be loaded.';
@@ -97,7 +94,6 @@
 			try {
 				view.setZoomFactor(zoom);
 			} catch {
-				// the guest is not attached yet
 			}
 		};
 
@@ -133,7 +129,6 @@
 		try {
 			webview?.setZoomFactor(value);
 		} catch {
-			// no guest until the next preview
 		}
 	}
 
@@ -219,7 +214,6 @@
 		theme = mode;
 		window.api?.setTheme(mode);
 
-		// reload the preview so the page re-evaluates its colour preference
 		if (request) {
 			request = { id: ++requestId, url: request.url };
 		}
@@ -325,7 +319,6 @@
 			</div>
 		{:else if request}
 			{#key request.id}
-				<!-- Same partition as the capture window, so logging in here carries over. -->
 				<webview
 					{@attach attachWebview}
 					src={request.url}

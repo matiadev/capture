@@ -21,7 +21,6 @@ function resolveFfmpeg(): string {
 	}
 
 	if (candidate) {
-		// packaged builds keep the binary outside the asar archive
 		const unpacked = candidate.replace('app.asar', 'app.asar.unpacked');
 		if (fs.existsSync(unpacked)) {
 			ffmpegCache = unpacked;
@@ -63,20 +62,17 @@ function slugify(input: string): string {
 	if (!base) return 'page';
 	if (base.length <= 16) return base;
 
-	// trim to a word boundary so names stay readable
 	const cut = base.slice(0, 16);
 	const lastDash = cut.lastIndexOf('-');
 	return (lastDash > 8 ? cut.slice(0, lastDash) : cut).replace(/-+$/, '');
 }
 
-// site name only, github-175134.mp4
 function fileBase(href: string, title: string): string {
 	if (!URL.canParse(href)) return slugify(title);
 
 	const host = new URL(href).hostname.replace(/^www\./, '');
 	if (!host) return slugify(title);
 
-	// keep IP addresses whole, otherwise drop the domain
 	const isIp = /^\d+(\.\d+){3}$/.test(host);
 	const site = isIp ? host : host.split('.')[0];
 	return site.replace(/[^a-zA-Z0-9.-]/g, '');
@@ -100,7 +96,6 @@ function uniquePath(dir: string, base: string, extension: string): string {
 	return candidate;
 }
 
-// scrolls once so lazy content loads, then measures
 const PREPARE = `(async () => {
 	const doc = document.documentElement;
 	const previous = doc.style.scrollBehavior;
@@ -139,7 +134,6 @@ const PREPARE = `(async () => {
 	};
 })()`;
 
-// re-injected after a reload, the style dies with the document
 const CLEAN_CSS = `(() => {
 	if (document.getElementById('__capture_clean')) return true;
 	const style = document.createElement('style');
@@ -161,7 +155,6 @@ const MEASURE = `(async () => {
 	};
 })()`;
 
-// reload restarts entry animations the warm-up scroll already played
 function reloadAndWait(win: BrowserWindow, timeoutMs = 15000): Promise<void> {
 	return new Promise<void>((resolve, reject) => {
 		let settled = false;
@@ -217,7 +210,6 @@ async function openPage({ url, width, height }: OpenPageOptions): Promise<Browse
 		show: false,
 		backgroundColor: '#ffffff',
 		webPreferences: {
-			// same partition as the preview, no persist prefix so it clears on exit
 			partition: 'capture',
 			offscreen: true,
 			backgroundThrottling: false,
@@ -297,7 +289,6 @@ async function capture(
 
 			const image = await win.webContents.capturePage();
 
-			// PNG keeps the intermediate lossless, encoding is not the bottleneck
 			const png = image.toPNG();
 
 			if (!ffmpeg) {
@@ -336,7 +327,6 @@ async function capture(
 					);
 				});
 
-				// we may abort before awaiting this, so keep the rejection handled
 				done.catch(() => {});
 			}
 
@@ -389,7 +379,6 @@ async function capture(
 	}
 }
 
-// Chromium caps a surface near 16384px, so the full-page shot is capped too
 const MAX_IMAGE_HEIGHT = 16000;
 
 async function captureImage({
@@ -415,7 +404,6 @@ async function captureImage({
 		let image = await win.webContents.capturePage();
 		let size = image.getSize();
 
-		// some pages ignore the resize, fall back to the viewport
 		if (size.height < 50) {
 			win.setContentSize(width, height);
 			await sleep(300);

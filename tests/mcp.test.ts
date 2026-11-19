@@ -68,7 +68,6 @@ async function startMcp(): Promise<{ client: McpClient; home: string }> {
 			try {
 				process.kill(-child.pid, 'SIGTERM');
 			} catch {
-				// already gone
 			}
 
 			await new Promise<void>((resolve) => {
